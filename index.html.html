@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binary Trees I — Lecture Notes</title>
+<style>
+:root{
+  --bg:#f5f7fb;
+  --panel:#ffffff;
+  --ink:#161b2e;
+  --muted:#5b6579;
+  --brand:#3b4cca;
+  --brand-dark:#2a36a0;
+  --teal:#0f9b8e;
+  --amber:#f59e0b;
+  --line:#e3e7f1;
+  --code-bg:#1a2033;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{
+  margin:0;background:var(--bg);color:var(--ink);line-height:1.65;
+  font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- HERO ---------- */
+.hero{
+  background:linear-gradient(135deg,#1b2568 0%,#3b4cca 48%,#0f9b8e 100%);
+  color:#fff;padding:52px 24px 58px;text-align:center;position:relative;overflow:hidden;
+}
+.hero::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255,255,255,.16), transparent 45%),
+    radial-gradient(circle at 88% 75%, rgba(255,255,255,.13), transparent 45%);
+  pointer-events:none;
+}
+.hero .kicker{
+  display:inline-block;font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);
+  padding:5px 14px;border-radius:999px;margin-bottom:16px;font-weight:600;
+}
+.hero h1{margin:0 0 10px;font-size:clamp(1.7rem,4vw,2.7rem);letter-spacing:-.02em;line-height:1.2}
+.hero p.sub{margin:0 auto;max-width:760px;opacity:.93;font-size:1.02rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:22px;position:relative;z-index:1}
+.chip{
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
+  padding:6px 14px;border-radius:999px;font-size:.83rem;font-weight:600;
+}
+
+/* ---------- LAYOUT ---------- */
+.layout{
+  display:grid;grid-template-columns:242px minmax(0,1fr);gap:28px;
+  max-width:1400px;margin:0 auto;padding:28px 24px 90px;
+}
+@media (max-width:1000px){
+  .layout{grid-template-columns:1fr;padding:20px 14px 70px}
+}
+
+/* ---------- TOC ---------- */
+.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto}
+.toc h2{
+  font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);
+  margin:0 0 10px 12px;font-weight:700;
+}
+.toc a{
+  display:block;padding:8px 12px;border-radius:9px;color:var(--muted);
+  text-decoration:none;font-size:.9rem;border-left:3px solid transparent;transition:.18s;
+}
+.toc a:hover{background:#eaeeff;color:var(--brand)}
+.toc a.active{background:#eaeeff;color:var(--brand-dark);border-left-color:var(--brand);font-weight:600}
+
+/* ---------- CARDS ---------- */
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px 28px;margin-bottom:24px;box-shadow:0 1px 3px rgba(16,24,40,.05);
+}
+@media (max-width:600px){.card{padding:20px 16px}}
+.card h2{
+  display:flex;align-items:center;gap:12px;margin:0 0 6px;font-size:1.32rem;letter-spacing:-.01em;
+}
+.num{
+  flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;font-size:.95rem;font-weight:700;
+}
+.card h3{margin:26px 0 8px;font-size:1.06rem;color:var(--brand-dark)}
+.card h4{margin:18px 0 6px;font-size:.95rem;color:var(--ink)}
+.card p{margin:10px 0}
+.lead{color:var(--muted)}
+ul,ol{margin:10px 0 10px 4px;padding-left:22px}
+li{margin:5px 0}
+code.inl{
+  background:#eef1fb;color:#2a36a0;padding:2px 6px;border-radius:5px;
+  font-family:"JetBrains Mono",Consolas,"Courier New",monospace;font-size:.86em;
+}
+
+/* ---------- CALLOUTS ---------- */
+.callout{
+  border-left:4px solid var(--brand);background:#f2f4ff;border-radius:0 10px 10px 0;
+  padding:12px 16px;margin:16px 0;font-size:.94rem;
+}
+.callout.tip{border-color:var(--teal);background:#eafaf8}
+.callout.warn{border-color:#f59e0b;background:#fff8ea}
+.callout strong{color:var(--brand-dark)}
+.callout.tip strong{color:#0b7a70}
+.callout.warn strong{color:#a35c00}
+
+/* ---------- TABLES ---------- */
+.tablewrap{overflow-x:auto;margin:16px 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:460px}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:#f0f3fd;font-weight:700;color:var(--brand-dark);font-size:.85rem;
+   letter-spacing:.02em;text-transform:uppercase}
+tbody tr:nth-child(even){background:#fafbff}
+td.center,th.center{text-align:center}
+
+/* ---------- CODE ---------- */
+pre{
+  background:var(--code-bg);color:#e6ecff;border-radius:12px;padding:18px 20px;
+  overflow-x:auto;font-size:.855rem;line-height:1.6;margin:14px 0;
+  font-family:"JetBrains Mono",Consolas,"Courier New",monospace;
+  border:1px solid #2a3350;
+}
+pre code{font-family:inherit}
+.k{color:#c792ea;font-weight:600}   /* keyword   */
+.s{color:#a5e075}                    /* string    */
+.c{color:#7b88b0;font-style:italic}  /* comment   */
+.n{color:#f2a65a}                    /* number    */
+.an{color:#f7d774}                   /* annotation*/
+.filename{
+  display:inline-block;background:#2a3350;color:#c9d3f5;font-size:.74rem;
+  letter-spacing:.06em;padding:4px 12px;border-radius:8px 8px 0 0;
+  font-family:"JetBrains Mono",Consolas,monospace;margin-bottom:-14px;position:relative;top:0;
+}
+
+/* ---------- GRID HELPERS ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.mini{
+  border:1px solid var(--line);border-radius:11px;padding:14px 16px;background:#fbfcff;
+}
+.mini h4{margin:0 0 6px;font-size:.92rem;color:var(--brand-dark)}
+.mini p{margin:0;font-size:.88rem;color:var(--muted)}
+
+/* ---------- TREE DIAGRAM (SVG) ---------- */
+.tree-svg{width:100%;height:auto;display:block}
+.edge{stroke:#b9c2e0;stroke-width:2.5}
+.node{transform-box:fill-box;transform-origin:center;transition:transform .2s}
+.node circle{fill:#fff;stroke:var(--brand);stroke-width:3;transition:fill .25s,stroke .25s}
+.node text{
+  fill:var(--brand-dark);font-size:29px;font-weight:700;text-anchor:middle;
+  dominant-baseline:central;font-family:inherit;
+}
+.node.done circle{fill:#d6f5ee;stroke:var(--teal)}
+.node.done text{fill:#0b6b62}
+.node.active{transform:scale(1.14)}
+.node.active circle{fill:var(--amber);stroke:#b45309}
+.node.active text{fill:#fff}
+
+/* ---------- VISUALIZER ---------- */
+.viz{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:start;margin-top:18px}
+@media (max-width:900px){.viz{grid-template-columns:1fr}}
+.viz-tree{
+  background:#fbfcff;border:1px solid var(--line);border-radius:12px;padding:8px;
+}
+.viz-panel{
+  background:#fbfcff;border:1px solid var(--line);border-radius:12px;padding:16px;
+}
+.viz-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+button{
+  font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink);
+  padding:8px 14px;border-radius:9px;transition:.15s;
+}
+button:hover{border-color:var(--brand);color:var(--brand);transform:translateY(-1px)}
+button.tbtn.on{background:var(--brand);border-color:var(--brand);color:#fff}
+button.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+button.primary:hover{background:#0c8277;color:#fff}
+button.primary.on{background:#a35c00;border-color:#a35c00}
+.trace-note{
+  font-size:.88rem;background:#fff;border:1px dashed #c8d0e8;border-radius:9px;
+  padding:10px 12px;min-height:44px;color:var(--muted);margin-bottom:12px;
+}
+.row{display:flex;align-items:center;gap:10px;margin:9px 0;flex-wrap:wrap}
+.row .lbl{
+  flex:none;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;color:var(--muted);min-width:86px;
+}
+.chips-out,.chips-stack{display:flex;gap:6px;flex-wrap:wrap;min-height:30px;align-items:center}
+.pill{
+  background:#eef1fb;border:1px solid #ccd5f4;color:var(--brand-dark);
+  padding:3px 11px;border-radius:7px;font-size:.85rem;font-weight:700;
+  font-family:"JetBrains Mono",Consolas,monospace;
+}
+.pill.stackpill{background:#fff4e2;border-color:#f4d29a;color:#955300}
+.pill.outpill{background:#e4f8f4;border-color:#a8e2d8;color:#0b6b62;animation:pop .28s ease}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.empty{color:#aab3c8;font-size:.85rem}
+
+/* ---------- TABS ---------- */
+.tabs{display:flex;gap:8px;border-bottom:2px solid var(--line);margin:18px 0 0;flex-wrap:wrap}
+.tab{
+  border:none;background:none;border-bottom:3px solid transparent;border-radius:0;
+  padding:10px 16px;color:var(--muted);font-weight:600;margin-bottom:-2px;
+}
+.tab:hover{transform:none;color:var(--brand)}
+.tab.on{color:var(--brand-dark);border-bottom-color:var(--brand)}
+.tabpanel{display:none;padding-top:16px}
+.tabpanel.on{display:block}
+
+/* ---------- ARRAY SLOTS ---------- */
+.slots{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.slot{
+  min-width:60px;text-align:center;border:1px solid var(--line);border-radius:9px;
+  background:#fff;padding:6px 4px;font-family:"JetBrains Mono",Consolas,monospace;
+}
+.slot .ix{display:block;font-size:.68rem;color:var(--muted);font-weight:700}
+.slot .val{display:block;font-size:1rem;font-weight:700;color:var(--brand-dark)}
+.slot.nul{background:#f4f6fb;border-style:dashed}
+.slot.nul .val{color:#b3bcd2}
+
+/* ---------- CALCULATOR ---------- */
+.calc{background:#f2f4ff;border:1px solid #ccd5f4;border-radius:11px;padding:16px;margin:16px 0}
+.calc input{
+  font-family:inherit;font-size:.95rem;padding:8px 12px;border-radius:8px;
+  border:1px solid #c3cdf0;width:110px;
+}
+.calc-out{
+  margin-top:12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:.86rem;
+  background:#fff;border-radius:9px;padding:12px 14px;border:1px solid #dde3f6;line-height:1.9;
+}
+
+/* ---------- QUIZ ---------- */
+.quiz{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0;background:#fbfcff}
+.quiz .q{font-weight:600;margin:0 0 12px}
+.opt{
+  display:block;width:100%;text-align:left;margin:7px 0;background:#fff;
+}
+.opt.correct{background:#e4f8f4;border-color:var(--teal);color:#0b6b62}
+.opt.wrong{background:#fdecec;border-color:#e05252;color:#a32020}
+.opt:disabled{cursor:default;transform:none}
+.fb{font-size:.86rem;margin:10px 0 0;font-weight:600;min-height:20px}
+.fb.ok{color:#0b7a70}
+.fb.no{color:#b03030}
+
+/* ---------- LAB ---------- */
+.labitem{
+  display:flex;gap:14px;padding:14px 0;border-bottom:1px dashed var(--line);
+}
+.labitem:last-child{border-bottom:none}
+.labnum{
+  flex:none;width:30px;height:30px;border-radius:8px;background:#eef1fb;color:var(--brand-dark);
+  display:grid;place-items:center;font-weight:700;font-size:.85rem;
+}
+.labitem .body{flex:1}
+.labitem .body h4{margin:2px 0 4px}
+.labitem .body p{margin:4px 0;font-size:.92rem;color:var(--muted)}
+
+footer{
+  text-align:center;padding:30px 20px 50px;color:var(--muted);font-size:.85rem;
+  border-top:1px solid var(--line);background:#fff;
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Data Structures &amp; Algorithms · Lecture 07</div>
+  <h1>Binary Trees I</h1>
+  <p class="sub">
+    Tree concepts and terminology · Binary trees · Linked &amp; sequential representations ·
+    Preorder, inorder, postorder and level-order traversals
+  </p>
+  <div class="chips">
+    <span class="chip">Tree terminology</span>
+    <span class="chip">Linked representation</span>
+    <span class="chip">Array representation</span>
+    <span class="chip">4 traversals</span>
+    <span class="chip">Java implementations</span>
+    <span class="chip">Lab exercises</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ================= TOC ================= -->
+  <aside class="toc">
+    <h2>Contents</h2>
+    <a href="#outcomes">0 · Learning outcomes</a>
+    <a href="#concepts">1 · Tree concepts &amp; terminology</a>
+    <a href="#binary">2 · Binary trees &amp; properties</a>
+    <a href="#reps">3 · Representations</a>
+    <a href="#traversal">4 · Traversal techniques</a>
+    <a href="#impl">5 · Java implementation</a>
+    <a href="#lab">6 · Laboratory</a>
+    <a href="#quiz">7 · Self-check quiz</a>
+    <a href="#summary">8 · Summary &amp; cheat sheet</a>
+  </aside>
+
+  <main>
+
+  <!-- ================= 0. OUTCOMES ================= -->
+  <section class="card" id="outcomes">
+    <h2><span class="num">0</span> Learning outcomes</h2>
+    <p class="lead">By the end of this lecture and the accompanying laboratory you should be able to:</p>
+    <ol>
+      <li><strong>Define</strong> the vocabulary of trees — root, parent, child, sibling, leaf, degree, level, depth, height, subtree, path, ancestor/descendant — and state the key structural properties of binary trees.</li>
+      <li><strong>Represent</strong> a binary tree both as a linked structure (nodes with <code class="inl">left</code>/<code class="inl">right</code> references) and as a sequential structure (an array using index arithmetic).</li>
+      <li><strong>Trace</strong> preorder, inorder, postorder and level-order traversals on a given tree, and explain <em>when</em> each one is useful.</li>
+      <li><strong>Implement</strong> a <code class="inl">TreeNode</code> class, recursive and iterative traversals, and basic tree operations (height, size, search, insert) in Java — then test them against known outputs.</li>
+    </ol>
+    <div class="callout tip">
+      <strong>Big picture:</strong> A binary tree is the first <em>non-linear</em> data structure in this course.
+      Everything we do later — binary search trees, heaps, expression trees, Huffman coding, balanced trees — is built on the four traversal patterns you learn today.
+    </div>
+  </section>
+
+  <!-- ================= 1. CONCEPTS ================= -->
+  <section class="card" id="concepts">
+    <h2><span class="num">1</span> Tree concepts &amp; terminology</h2>
+
+    <p>
+      Arrays and linked lists are <strong>linear</strong>: every element has at most one predecessor and one successor.
+      A <strong>tree</strong> is a <strong>non-linear, hierarchical</strong> structure: each element may have many successors
+      but only one predecessor. Trees model file systems, organisation charts, HTML documents, decision processes,
+      arithmetic expressions and much more.
+    </p>
+
+    <h3>1.1 Formal definition</h3>
+    <p>A <strong>tree</strong> is a finite set of nodes such that:</p>
+    <ul>
+      <li>there is exactly one specially designated node called the <strong>root</strong>; and</li>
+      <li>the remaining nodes are partitioned into <em>n ≥ 0</em> disjoint sets <em>T<sub>1</sub>, T<sub>2</sub>, …, T<sub>n</sub></em>, each of which is itself a tree (the <strong>subtrees</strong> of the root).</li>
+    </ul>
+    <p>
+      Because the subtrees are themselves trees, the definition is <strong>recursive</strong> — and that is exactly why
+      almost every tree algorithm you will write is recursive too.
+    </p>
+
+    <h3>1.2 The reference tree used in this lecture</h3>
+    <p>Everything below refers to this tree. Keep it in front of you.</p>
+
+    <div class="viz-tree" style="margin:16px 0">
+      <svg class="tree-svg" viewBox="0 0 1000 420" role="img" aria-label="Sample binary tree with nodes A to G">
+        <g class="edges">
+          <line class="edge" x1="500" y1="60" x2="250" y2="150"/>
+          <line class="edge" x1="500" y1="60" x2="750" y2="150"/>
+          <line class="edge" x1="250" y1="150" x2="125" y2="250"/>
+          <line class="edge" x1="250" y1="150" x2="375" y2="250"/>
+          <line class="edge" x1="750" y1="150" x2="875" y2="250"/>
+          <line class="edge" x1="375" y1="250" x2="250" y2="350"/>
+        </g>
+        <g class="nodes">
+          <g class="node"><circle cx="500" cy="60" r="32"/><text x="500" y="60">A</text></g>
+          <g class="node"><circle cx="250" cy="150" r="32"/><text x="250" y="150">B</text></g>
+          <g class="node"><circle cx="750" cy="150" r="32"/><text x="750" y="150">C</text></g>
+          <g class="node"><circle cx="125" cy="250" r="32"/><text x="125" y="250">D</text></g>
+          <g class="node"><circle cx="375" cy="250" r="32"/><text x="375" y="250">E</text></g>
+          <g class="node"><circle cx="875" cy="250" r="32"/><text x="875" y="250">F</text></g>
+          <g class="node"><circle cx="250" cy="350" r="32"/><text x="250" y="350">G</text></g>
+        </g>
+      </svg>
+    </div>
+
+    <h3>1.3 Glossary</h3>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th style="width:190px">Term</th><th>Meaning</th><th style="width:230px">In our tree</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Node</strong></td><td>An element of the tree, holding data plus links to its children.</td><td>A, B, C, …, G</td></tr>
+          <tr><td><strong>Root</strong></td><td>The unique topmost node; it has no parent.</td><td>A</td></tr>
+          <tr><td><strong>Edge</strong></td><td>A link between a parent and a child. A tree with <em>n</em> nodes has exactly <em>n − 1</em> edges.</td><td>A–B, A–C, B–D, … (6 edges, 7 nodes)</td></tr>
+          <tr><td><strong>Parent</strong></td><td>The node directly above a given node.</td><td>B is the parent of D and E</td></tr>
+          <tr><td><strong>Child</strong></td><td>A node directly below another node.</td><td>B and C are children of A</td></tr>
+          <tr><td><strong>Siblings</strong></td><td>Nodes sharing the same parent.</td><td>D &amp; E; B &amp; C</td></tr>
+          <tr><td><strong>Leaf / external</strong></td><td>A node with no children.</td><td>D, G, F</td></tr>
+          <tr><td><strong>Internal node</strong></td><td>A node with at least one child.</td><td>A, B, C, E</td></tr>
+          <tr><td><strong>Degree of a node</strong></td><td>Number of children it has.</td><td>deg(A)=2, deg(C)=1, deg(D)=0</td></tr>
+          <tr><td><strong>Degree of a tree</strong></td><td>Maximum node degree in the tree.</td><td>2</td></tr>
+          <tr><td><strong>Level</strong></td><td>Root is level 0; a child's level is its parent's level + 1.</td><td>A=0, B,C=1, D,E,F=2, G=3</td></tr>
+          <tr><td><strong>Depth of a node</strong></td><td>Number of edges from the root down to that node (= its level).</td><td>depth(G)=3</td></tr>
+          <tr><td><strong>Height of a node</strong></td><td>Number of edges on the <em>longest</em> downward path from that node to a leaf.</td><td>height(A)=3, height(E)=1, height(D)=0</td></tr>
+          <tr><td><strong>Height of a tree</strong></td><td>Height of the root. (Empty tree = −1 in our convention.)</td><td>3</td></tr>
+          <tr><td><strong>Path</strong></td><td>A sequence of nodes where each is adjacent to the next.</td><td>A → B → E → G</td></tr>
+          <tr><td><strong>Ancestor / Descendant</strong></td><td>Everything on the path up from / down from a node.</td><td>Ancestors of G: E, B, A</td></tr>
+          <tr><td><strong>Subtree</strong></td><td>A node plus all of its descendants.</td><td>Subtree at E = {E, G}</td></tr>
+          <tr><td><strong>Forest</strong></td><td>An ordered collection of disjoint trees.</td><td>Remove A → forest {B-subtree, C-subtree}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <strong>Watch out:</strong> <em>depth</em> is measured <strong>downwards from the root</strong> (it belongs to the node),
+      while <em>height</em> is measured <strong>upwards from the leaves</strong> (it belongs to the subtree).
+      A leaf has height 0 but its depth can be anything. Some textbooks count height in <em>nodes</em> instead of edges,
+      which shifts every value by 1 — always state your convention. We use <strong>height = number of edges</strong>.
+    </div>
+  </section>
+
+  <!-- ================= 2. BINARY TREES ================= -->
+  <section class="card" id="binary">
+    <h2><span class="num">2</span> Binary trees &amp; properties</h2>
+
+    <p>
+      A <strong>binary tree</strong> is a tree in which every node has <strong>at most two children</strong>,
+      conventionally called the <strong>left child</strong> and the <strong>right child</strong>.
+      The order matters: <em>left</em> and <em>right</em> are different, even if only one child exists.
+    </p>
+
+    <div class="callout">
+      <strong>Binary tree ≠ binary search tree.</strong> A binary tree says nothing about the values stored.
+      A <em>BST</em> adds the ordering rule <em>left &lt; node &lt; right</em> — that is next lecture.
+    </div>
+
+    <h3>2.1 Special shapes</h3>
+    <div class="grid2">
+      <div class="mini">
+        <h4>Full (strict / proper)</h4>
+        <p>Every node has either 0 or 2 children. No node has exactly one child.</p>
+      </div>
+      <div class="mini">
+        <h4>Complete</h4>
+        <p>All levels are full except possibly the last, which is filled strictly left-to-right. <em>Heaps use this shape.</em></p>
+      </div>
+      <div class="mini">
+        <h4>Perfect</h4>
+        <p>All internal nodes have 2 children and all leaves are on the same level. Contains exactly 2<sup>h+1</sup> − 1 nodes.</p>
+      </div>
+      <div class="mini">
+        <h4>Balanced</h4>
+        <p>The heights of the left and right subtrees of every node differ by at most 1. Keeps height ≈ log n.</p>
+      </div>
+      <div class="mini">
+        <h4>Degenerate / skewed</h4>
+        <p>Every node has only one child. It is effectively a linked list — height n − 1, all operations O(n).</p>
+      </div>
+      <div class="mini">
+        <h4>Our sample tree</h4>
+        <p>Not full (C has one child), not complete (level 2 has a gap at C's left), not perfect. Height = 3.</p>
+      </div>
+    </div>
+
+    <h3>2.2 Key properties (memorise these)</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th style="width:55%">Property</th><th>Formula / value</th></tr></thead>
+        <tbody>
+          <tr><td>Maximum nodes on level <em>ℓ</em> (root = level 0)</td><td><strong>2<sup>ℓ</sup></strong></td></tr>
+          <tr><td>Maximum nodes in a binary tree of height <em>h</em></td><td><strong>2<sup>h+1</sup> − 1</strong></td></tr>
+          <tr><td>Minimum height of a binary tree with <em>n</em> nodes</td><td><strong>⌊log<sub>2</sub> n⌋</strong></td></tr>
+          <tr><td>Maximum height of a binary tree with <em>n</em> nodes</td><td><strong>n − 1</strong> (skewed)</td></tr>
+          <tr><td>Edges in a tree with <em>n</em> nodes</td><td><strong>n − 1</strong></td></tr>
+          <tr><td>Null links in a binary tree with <em>n</em> nodes</td><td><strong>n + 1</strong> (each node contributes 2 slots; n − 1 are used)</td></tr>
+          <tr><td>Nodes at level <em>ℓ</em> in a perfect tree</td><td><strong>2<sup>ℓ</sup></strong></td></tr>
+          <tr><td>Leaves in a perfect tree of height <em>h</em></td><td><strong>2<sup>h</sup></strong></td></tr>
+          <tr><td>Relationship between leaves <em>L</em> and degree-2 nodes <em>N₂</em> (in a full binary tree)</td><td><strong>L = N₂ + 1</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Quick check on our sample tree</h4>
+    <ul>
+      <li>n = 7 nodes → edges = 6 ✓</li>
+      <li>Null links = n + 1 = 8. Count them: D(2), F(2), G(2), C's left(1), E's right(1) = 8 ✓</li>
+      <li>Height 3 → max possible nodes = 2<sup>4</sup> − 1 = 15. We only use 7, so there is room for 8 more.</li>
+      <li>Minimum height for 7 nodes = ⌊log₂ 7⌋ = 2 — our tree is <em>not</em> optimally balanced.</li>
+    </ul>
+  </section>
+
+  <!-- ================= 3. REPRESENTATIONS ================= -->
+  <section class="card" id="reps">
+    <h2><span class="num">3</span> Representing binary trees</h2>
+    <p class="lead">Two standard representations. Choose based on the <em>shape</em> of your tree.</p>
+
+    <div class="tabs">
+      <button class="tab on" data-tab="tab-linked">A · Linked representation</button>
+      <button class="tab" data-tab="tab-array">B · Sequential (array) representation</button>
+      <button class="tab" data-tab="tab-compare">C · Comparison</button>
+    </div>
+
+    <!-- ----- LINKED ----- -->
+    <div class="tabpanel on" id="tab-linked">
+      <p>
+        Each node is an object holding the data plus two references. The tree itself is just a reference to the root.
+        Empty subtrees are represented by <code class="inl">null</code>.
+      </p>
+
+      <div class="viz-tree" style="margin:16px 0">
+        <svg class="tree-svg" viewBox="0 0 900 270" role="img" aria-label="Linked representation of a binary tree">
+          <defs>
+            <marker id="arw" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 z" fill="#3b4cca"/>
+            </marker>
+          </defs>
+
+          <!-- field labels -->
+          <text x="418" y="30" font-size="13" fill="#5b6579" text-anchor="middle" font-weight="700">left</text>
+          <text x="454" y="30" font-size="13" fill="#5b6579" text-anchor="middle" font-weight="700">data</text>
+          <text x="490" y="30" font-size="13" fill="#5b6579" text-anchor="middle" font-weight="700">right</text>
+
+          <!-- root A -->
+          <rect x="400" y="40" width="108" height="44" rx="7" fill="#fff" stroke="#3b4cca" stroke-width="2.5"/>
+          <line x1="436" y1="40" x2="436" y2="84" stroke="#3b4cca" stroke-width="2"/>
+          <line x1="472" y1="40" x2="472" y2="84" stroke="#3b4cca" stroke-width="2"/>
+          <text x="418" y="62" font-size="14" fill="#3b4cca" text-anchor="middle" dominant-baseline="central">●</text>
+          <text x="454" y="62" font-size="19" fill="#161b2e" text-anchor="middle" dominant-baseline="central" font-weight="700">A</text>
+          <text x="490" y="62" font-size="14" fill="#3b4cca" text-anchor="middle" dominant-baseline="central">●</text>
+
+          <!-- arrows -->
+          <path d="M418,86 C418,135 294,130 294,174" fill="none" stroke="#3b4cca" stroke-width="2" marker-end="url(#arw)"/>
+          <path d="M490,86 C490,135 614,130 614,174" fill="none" stroke="#3b4cca" stroke-width="2" marker-end="url(#arw)"/>
+
+          <!-- B -->
+          <rect x="240" y="180" width="108" height="44" rx="7" fill="#fff" stroke="#3b4cca" stroke-width="2.5"/>
+          <line x1="276" y1="180" x2="276" y2="224" stroke="#3b4cca" stroke-width="2"/>
+          <line x1="312" y1="180" x2="312" y2="224" stroke="#3b4cca" stroke-width="2"/>
+          <text x="258" y="202" font-size="14" fill="#aab3c8" text-anchor="middle" dominant-baseline="central">∅</text>
+          <text x="294" y="202" font-size="19" fill="#161b2e" text-anchor="middle" dominant-baseline="central" font-weight="700">B</text>
+          <text x="330" y="202" font-size="14" fill="#aab3c8" text-anchor="middle" dominant-baseline="central">∅</text>
+
+          <!-- C -->
+          <rect x="560" y="180" width="108" height="44" rx="7" fill="#fff" stroke="#3b4cca" stroke-width="2.5"/>
+          <line x1="596" y1="180" x2="596" y2="224" stroke="#3b4cca" stroke-width="2"/>
+          <line x1="632" y1="180" x2="632" y2="224" stroke="#3b4cca" stroke-width="2"/>
+          <text x="578" y="202" font-size="14" fill="#aab3c8" text-anchor="middle" dominant-baseline="central">∅</text>
+          <text x="614" y="202" font-size="19" fill="#161b2e" text-anchor="middle" dominant-baseline="central" font-weight="700">C</text>
+          <text x="650" y="202" font-size="14" fill="#aab3c8" text-anchor="middle" dominant-baseline="central">∅</text>
+
+          <text x="450" y="258" font-size="13" fill="#5b6579" text-anchor="middle">
+            ∅ = null reference (empty subtree) · the tree object stores only a reference to the root
+          </text>
+        </svg>
+      </div>
+
+      <span class="filename">TreeNode.java</span>
+      <pre><code class="java">/** One node of a binary tree. */
+class TreeNode {
+    char data;          // payload (use int, String or a generic T in general)
+    TreeNode left;      // reference to the left child  (null = no child)
+    TreeNode right;     // reference to the right child (null = no child)
+
+    TreeNode(char data) {
+        this.data = data;      // left and right are automatically null
+    }
+
+    boolean isLeaf() {
+        return left == null &amp;&amp; right == null;
+    }
+}</code></pre>
+
+      <div class="callout tip">
+        <strong>Why it is flexible:</strong> the linked form allocates memory only for nodes that actually exist.
+        A tree with 7 nodes costs exactly 7 node objects — no wasted slots, no matter how skewed the shape is.
+        The price is that each node carries two references (memory overhead) and the tree is not a contiguous block
+        (poorer cache locality).
+      </div>
+    </div>
+
+    <!-- ----- ARRAY ----- -->
+    <div class="tabpanel" id="tab-array">
+      <p>
+        A binary tree can also be stored in a <strong>single array</strong> by numbering the nodes in level order and
+        placing each node at its number. If a node sits at index <code class="inl">i</code>, its relatives are found
+        by pure arithmetic — no pointers at all:
+      </p>
+
+      <div class="callout">
+        <strong>Index formulas</strong> (0-based array):<br>
+        <code class="inl">left(i) = 2i + 1</code> &nbsp;·&nbsp;
+        <code class="inl">right(i) = 2i + 2</code> &nbsp;·&nbsp;
+        <code class="inl">parent(i) = (i − 1) / 2</code> &nbsp;(integer division)
+      </div>
+
+      <h4>Our sample tree stored sequentially</h4>
+      <div class="slots">
+        <div class="slot"><span class="ix">0</span><span class="val">A</span></div>
+        <div class="slot"><span class="ix">1</span><span class="val">B</span></div>
+        <div class="slot"><span class="ix">2</span><span class="val">C</span></div>
+        <div class="slot"><span class="ix">3</span><span class="val">D</span></div>
+        <div class="slot"><span class="ix">4</span><span class="val">E</span></div>
+        <div class="slot nul"><span class="ix">5</span><span class="val">—</span></div>
+        <div class="slot"><span class="ix">6</span><span class="val">F</span></div>
+        <div class="slot nul"><span class="ix">7</span><span class="val">—</span></div>
+        <div class="slot nul"><span class="ix">8</span><span class="val">—</span></div>
+        <div class="slot"><span class="ix">9</span><span class="val">G</span></div>
+        <div class="slot nul"><span class="ix">10</span><span class="val">—</span></div>
+      </div>
+
+      <p>
+        7 nodes occupy an 11-slot array — <strong>4 slots wasted</strong>. Notice that index 5 is empty because C has no
+        left child, and G lands at index 9 (E is at 4, so its left child is 2·4+1 = 9). The array is
+        <em>positional</em>, not merely "level order with gaps filled".
+      </p>
+
+      <div class="calc">
+        <h4 style="margin-top:0">Try the index arithmetic</h4>
+        <label for="idxInput" style="font-size:.9rem">Node at index&nbsp;</label>
+        <input id="idxInput" type="number" min="0" value="4">
+        <button id="idxBtn" class="primary" style="margin-left:8px">Compute</button>
+        <div class="calc-out" id="calcOut">Enter an index and press Compute.</div>
+      </div>
+
+      <span class="filename">ArrayBinaryTree.java</span>
+      <pre><code class="java">public class ArrayBinaryTree {
+    private Integer[] tree;          // null marks an empty slot
+
+    public ArrayBinaryTree(int capacity) {
+        tree = new Integer[capacity];
+    }
+
+    /* --- index arithmetic --- */
+    public int left(int i)   { return 2 * i + 1; }
+    public int right(int i)  { return 2 * i + 2; }
+    public int parent(int i) { return (i - 1) / 2; }   // integer division
+
+    public void setRoot(int value)              { tree[0] = value; }
+    public void setLeft(int i, int value)       { tree[left(i)]  = value; }
+    public void setRight(int i, int value)      { tree[right(i)] = value; }
+
+    /** Preorder traversal of the array form — note the base case must also
+        check the array bounds, because a missing child may fall off the end. */
+    public void preorder(int i) {
+        if (i &gt;= tree.length || tree[i] == null) return;
+        System.out.print(tree[i] + " ");
+        preorder(left(i));
+        preorder(right(i));
+    }
+}</code></pre>
+
+      <div class="callout warn">
+        <strong>The cost of gaps.</strong> A skewed tree of <em>n</em> nodes has height <em>n − 1</em>, so its array
+        needs up to <strong>2<sup>n</sup> − 1</strong> slots. Ten nodes in a chain would need 1023 slots!
+        The array form is therefore only sensible for <strong>complete</strong> trees — which is precisely why heaps use it.
+      </div>
+    </div>
+
+    <!-- ----- COMPARE ----- -->
+    <div class="tabpanel" id="tab-compare">
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th style="width:26%">Criterion</th><th>Linked representation</th><th>Array representation</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Memory per node</td><td>data + 2 references</td><td>1 slot (plus padding for alignment)</td></tr>
+            <tr><td>Wasted memory</td><td>None — allocate only what exists</td><td>Up to 2<sup>h+1</sup> − 1 slots for a sparse/skewed tree</td></tr>
+            <tr><td>Find left/right child</td><td>O(1) — follow the reference</td><td>O(1) — index formula</td></tr>
+            <tr><td>Find parent</td><td>O(n) unless you store a parent reference</td><td>O(1) — (i−1)/2</td></tr>
+            <tr><td>Insert / delete nodes</td><td>Easy — just re-link references</td><td>Awkward — requires reshuffling</td></tr>
+            <tr><td>Resizing</td><td>Dynamic, grows node by node</td><td>Fixed capacity; must copy into a bigger array</td></tr>
+            <tr><td>Cache behaviour</td><td>Poorer (nodes scattered on the heap)</td><td>Excellent (contiguous block)</td></tr>
+            <tr><td>Best suited to</td><td>General binary trees, BSTs, expression trees</td><td>Complete trees — <strong>heaps</strong>, segment trees</td></tr>
+            <tr><td>Height needed</td><td>None</td><td>Must be known to size the array</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout tip">
+        <strong>Rule of thumb:</strong> if the tree is <em>complete</em> (or nearly so), the array wins — no pointers, perfect
+        locality, and O(1) parent lookup. Otherwise use the linked form.
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4. TRAVERSALS ================= -->
+  <section class="card" id="traversal">
+    <h2><span class="num">4</span> Binary-tree traversal techniques</h2>
+    <p>
+      A <strong>traversal</strong> is a systematic way of visiting every node in the tree <em>exactly once</em>.
+      Because a tree is not linear, "visit everything" is ambiguous — and each sensible order turns out to be useful
+      for a different problem.
+    </p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Traversal</th><th>Order</th><th>Typical use</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Preorder</strong></td><td>Node → Left → Right</td><td>Copy/clone a tree, serialize, prefix expression, directory listing</td></tr>
+          <tr><td><strong>Inorder</strong></td><td>Left → Node → Right</td><td>Sorted output from a BST, infix expression</td></tr>
+          <tr><td><strong>Postorder</strong></td><td>Left → Right → Node</td><td>Delete/free a tree, evaluate postfix expression, compute sizes/heights</td></tr>
+          <tr><td><strong>Level-order</strong></td><td>Level 0, then level 1, …</td><td>Breadth-first search, printing by level, checking completeness</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>Depth-first vs breadth-first.</strong> The first three are <em>depth-first</em> (they dive to a leaf before
+      backtracking) and are naturally recursive. Level-order is <em>breadth-first</em> and needs a <strong>queue</strong>
+      instead of a call stack.
+    </div>
+
+    <h3>4.1 Interactive traversal tracer</h3>
+    <p class="lead">Pick a traversal, then press <strong>Play</strong> or step through it one node at a time.</p>
+
+    <div class="viz">
+      <div class="viz-tree">
+        <svg class="tree-svg" id="treeSvg" viewBox="0 0 1000 420" role="img" aria-label="Interactive binary tree">
+          <g class="edges">
+            <line class="edge" x1="500" y1="60" x2="250" y2="150"/>
+            <line class="edge" x1="500" y1="60" x2="750" y2="150"/>
+            <line class="edge" x1="250" y1="150" x2="125" y2="250"/>
+            <line class="edge" x1="250" y1="150" x2="375" y2="250"/>
+            <line class="edge" x1="750" y1="150" x2="875" y2="250"/>
+            <line class="edge" x1="375" y1="250" x2="250" y2="350"/>
+          </g>
+          <g class="nodes" id="nodeGroup">
+            <g class="node" data-node="A"><circle cx="500" cy="60" r="32"/><text x="500" y="60">A</text></g>
+            <g class="node" data-node="B"><circle cx="250" cy="150" r="32"/><text x="250" y="150">B</text></g>
+            <g class="node" data-node="C"><circle cx="750" cy="150" r="32"/><text x="750" y="150">C</text></g>
+            <g class="node" data-node="D"><circle cx="125" cy="250" r="32"/><text x="125" y="250">D</text></g>
+            <g class="node" data-node="E"><circle cx="375" cy="250" r="32"/><text x="375" y="250">E</text></g>
+            <g class="node" data-node="F"><circle cx="875" cy="250" r="32"/><text x="875" y="250">F</text></g>
+            <g class="node" data-node="G"><circle cx="250" cy="350" r="32"/><text x="250" y="350">G</text></g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="viz-panel">
+        <div class="viz-controls">
+          <button class="tbtn" data-trav="preorder">Preorder</button>
+          <button class="tbtn" data-trav="inorder">Inorder</button>
+          <button class="tbtn" data-trav="postorder">Postorder</button>
+          <button class="tbtn" data-trav="level">Level-order</button>
+        </div>
+        <div class="viz-controls">
+          <button id="btnPlay" class="primary">▶ Play</button>
+          <button id="btnStep">Step ▸</button>
+          <button id="btnReset">↺ Reset</button>
+        </div>
+
+        <div class="trace-note" id="traceNote">Choose a traversal, then press Play or Step.</div>
+
+        <div class="row">
+          <span class="lbl" id="stackLabel">Call stack</span>
+          <div class="chips-stack" id="stackChips"><span class="empty">—</span></div>
+        </div>
+        <div class="row">
+          <span class="lbl">Output</span>
+          <div class="chips-out" id="outSeq"><span class="empty">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h3>4.2 The three depth-first orders, traced by hand</h3>
+    <p>Remember the one-line rule: <strong>the position of "visit" relative to the two recursive calls decides the order.</strong></p>
+
+    <div class="grid2">
+      <div class="mini">
+        <h4>Preorder — visit, then left, then right</h4>
+        <p style="font-family:monospace;color:#161b2e;font-size:.85rem">
+          A → B → D → E → G → C → F
+        </p>
+        <p style="margin-top:8px">Trace: visit A, descend left to B, descend left to D (leaf, backtrack), right to E, left to G (backtrack twice), back up to A, descend right to C, then right to F.</p>
+      </div>
+      <div class="mini">
+        <h4>Inorder — left, visit, right</h4>
+        <p style="font-family:monospace;color:#161b2e;font-size:.85rem">
+          D → B → G → E → A → C → F
+        </p>
+        <p style="margin-top:8px">Trace: go as far left as possible (D), visit D, back to B, visit B, into E's left (G), visit G, visit E, back to A, visit A, right to C, visit C, right to F.</p>
+      </div>
+      <div class="mini">
+        <h4>Postorder — left, right, then visit</h4>
+        <p style="font-family:monospace;color:#161b2e;font-size:.85rem">
+          D → G → E → B → F → C → A
+        </p>
+        <p style="margin-top:8px">Trace: children are always finished before their parent. The root A is visited <em>last</em> — which is why postorder is the order you delete a tree in.</p>
+      </div>
+      <div class="mini">
+        <h4>Level-order — top to bottom, left to right</h4>
+        <p style="font-family:monospace;color:#161b2e;font-size:.85rem">
+          A → B → C → D → E → F → G
+        </p>
+        <p style="margin-top:8px">Trace: enqueue A; dequeue A, visit it, enqueue B and C; dequeue B, visit, enqueue D and E; … Each node enqueues its children as it is visited.</p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <strong>Exam tip:</strong> to find the inorder sequence quickly, "squash" the tree: read every node as if you were
+      projecting it straight down onto a horizontal line. To find preorder, trace the outline of the tree
+      anti-clockwise, writing a node the first time you pass its left side.
+    </div>
+  </section>
+
+  <!-- ================= 5. JAVA IMPLEMENTATION ================= -->
+  <section class="card" id="impl">
+    <h2><span class="num">5</span> Implementing binary trees in Java</h2>
+
+    <h3>5.1 Recursive traversals — the canonical code</h3>
+    <p>
+      Each recursive method has exactly the same shape: <em>base case</em> (empty subtree → return) followed by
+      three statements whose order defines the traversal.
+    </p>
+
+    <span class="filename">BinaryTree.java (part 1 — recursive traversals)</span>
+    <pre><code class="java">import java.util.*;
+
+public class BinaryTree {
+
+    private TreeNode root;
+
+    public BinaryTree()              { root = null; }
+    public BinaryTree(TreeNode root) { this.root = root; }
+    public boolean isEmpty()         { return root == null; }
+
+    /* ---------- public wrappers ---------- */
+    public void preorder()  { preorder(root);  System.out.println(); }
+    public void inorder()   { inorder(root);   System.out.println(); }
+    public void postorder() { postorder(root); System.out.println(); }
+
+    /* ---------- recursive workers ---------- */
+    private void preorder(TreeNode node) {
+        if (node == null) return;             // base case: empty subtree
+        System.out.print(node.data + " ");    // 1. VISIT
+        preorder(node.left);                  // 2. LEFT
+        preorder(node.right);                 // 3. RIGHT
+    }
+
+    private void inorder(TreeNode node) {
+        if (node == null) return;
+        inorder(node.left);                   // 1. LEFT
+        System.out.print(node.data + " ");    // 2. VISIT
+        inorder(node.right);                  // 3. RIGHT
+    }
+
+    private void postorder(TreeNode node) {
+        if (node == null) return;
+        postorder(node.left);                 // 1. LEFT
+        postorder(node.right);                // 2. RIGHT
+        System.out.print(node.data + " ");    // 3. VISIT
+    }
+}</code></pre>
+
+    <div class="callout">
+      <strong>Why the wrapper?</strong> Users of the class should not have to know about <code class="inl">TreeNode</code>
+      or pass the root themselves. The public no-argument method hides the recursion behind a clean API.
+    </div>
+
+    <h3>5.2 Level-order traversal</h3>
+    <span class="filename">BinaryTree.java (part 2 — breadth-first)</span>
+    <pre><code class="java">    /** Breadth-first traversal using a FIFO queue. */
+    public void levelOrder() {
+        if (root == null) return;
+
+        Queue&lt;TreeNode&gt; queue = new LinkedList&lt;&gt;();
+        queue.offer(root);                       // start with the root
+
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();        // take the front node
+            System.out.print(node.data + " ");   // visit it
+
+            if (node.left  != null) queue.offer(node.left);
+            if (node.right != null) queue.offer(node.right);
+        }
+        System.out.println();
+    }
+
+    /** Level-order, one line per level — useful for visualising the shape. */
+    public void levelOrderByLevel() {
+        if (root == null) return;
+        Queue&lt;TreeNode&gt; queue = new LinkedList&lt;&gt;();
+        queue.offer(root);
+
+        while (!queue.isEmpty()) {
+            int nodesOnThisLevel = queue.size();   // freeze the level size
+            for (int i = 0; i &lt; nodesOnThisLevel; i++) {
+                TreeNode node = queue.poll();
+                System.out.print(node.data + " ");
+                if (node.left  != null) queue.offer(node.left);
+                if (node.right != null) queue.offer(node.right);
+            }
+            System.out.println();                  // end of a level
+        }
+    }</code></pre>
+
+    <h3>5.3 Iterative depth-first traversals</h3>
+    <p>
+      Recursion uses the JVM call stack. When the tree is very deep, that stack can overflow
+      (<code class="inl">StackOverflowError</code>), so an explicit <code class="inl">Deque</code> used as a stack is often preferred.
+    </p>
+
+    <span class="filename">IterativeTraversals.java</span>
+    <pre><code class="java">import java.util.*;
+
+public class IterativeTraversals {
+
+    /* ---------- PREORDER: push root, pop, print, push right then left ---------- */
+    public static void preorder(TreeNode root) {
+        if (root == null) return;
+        Deque&lt;TreeNode&gt; stack = new ArrayDeque&lt;&gt;();
+        stack.push(root);
+
+        while (!stack.isEmpty()) {
+            TreeNode node = stack.pop();
+            System.out.print(node.data + " ");
+            if (node.right != null) stack.push(node.right);  // right first ...
+            if (node.left  != null) stack.push(node.left);   // ... so left pops first
+        }
+        System.out.println();
+    }
+
+    /* ---------- INORDER: slide left as far as possible, then pop & go right ---------- */
+    public static void inorder(TreeNode root) {
+        Deque&lt;TreeNode&gt; stack = new ArrayDeque&lt;&gt;();
+        TreeNode current = root;
+
+        while (current != null || !stack.isEmpty()) {
+            while (current != null) {      // walk down the left spine
+                stack.push(current);
+                current = current.left;
+            }
+            current = stack.pop();         // leftmost unvisited node
+            System.out.print(current.data + " ");
+            current = current.right;       // then its right subtree
+        }
+        System.out.println();
+    }
+
+    /* ---------- POSTORDER: one stack + a "last visited" marker ---------- */
+    public static void postorder(TreeNode root) {
+        Deque&lt;TreeNode&gt; stack = new ArrayDeque&lt;&gt;();
+        TreeNode current = root;
+        TreeNode lastVisited = null;
+
+        while (current != null || !stack.isEmpty()) {
+            if (current != null) {
+                stack.push(current);
+                current = current.left;
+            } else {
+                TreeNode peek = stack.peek();
+                if (peek.right != null &amp;&amp; lastVisited != peek.right) {
+                    current = peek.right;          // right subtree still pending
+                } else {
+                    System.out.print(peek.data + " ");
+                    lastVisited = stack.pop();     // both subtrees done
+                }
+            }
+        }
+        System.out.println();
+    }
+}</code></pre>
+
+    <div class="callout warn">
+      <strong>Common bug:</strong> in iterative preorder, forgetting to push <em>right before left</em>.
+      A stack is LIFO, so whatever you push last is popped first. Push right first to have left processed first.
+    </div>
+
+    <h3>5.4 Other core operations</h3>
+    <span class="filename">BinaryTree.java (part 3 — operations)</span>
+    <pre><code class="java">    /* ---------- height in edges (empty tree = -1, single node = 0) ---------- */
+    public int height() { return height(root); }
+
+    private int height(TreeNode node) {
+        if (node == null) return -1;
+        return 1 + Math.max(height(node.left), height(node.right));
+    }
+
+    /* ---------- number of nodes ---------- */
+    public int size() { return size(root); }
+
+    private int size(TreeNode node) {
+        if (node == null) return 0;
+        return 1 + size(node.left) + size(node.right);
+    }
+
+    /* ---------- number of leaves ---------- */
+    public int countLeaves() { return countLeaves(root); }
+
+    private int countLeaves(TreeNode node) {
+        if (node == null) return 0;
+        if (node.isLeaf()) return 1;
+        return countLeaves(node.left) + countLeaves(node.right);
+    }
+
+    /* ---------- search (ordinary binary tree, no ordering rule) ---------- */
+    public boolean contains(char key) { return contains(root, key); }
+
+    private boolean contains(TreeNode node, char key) {
+        if (node == null)         return false;
+        if (node.data == key)     return true;
+        return contains(node.left, key) || contains(node.right, key);
+    }
+
+    /* ---------- level-order insert: first free slot, top to bottom ---------- */
+    public void insert(char value) {
+        TreeNode newNode = new TreeNode(value);
+        if (root == null) { root = newNode; return; }
+
+        Queue&lt;TreeNode&gt; queue = new LinkedList&lt;&gt;();
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            if (node.left == null)  { node.left  = newNode; return; }
+            if (node.right == null) { node.right = newNode; return; }
+            queue.offer(node.left);
+            queue.offer(node.right);
+        }
+    }
+
+    /* ---------- delete the whole tree (postorder!) ---------- */
+    public void clear() { clear(root); root = null; }
+
+    private void clear(TreeNode node) {
+        if (node == null) return;
+        clear(node.left);        // free the left subtree
+        clear(node.right);       // free the right subtree
+        node.left = node.right = null;   // now it is safe to drop this node
+    }</code></pre>
+
+    <div class="callout tip">
+      <strong>Notice the pattern.</strong> <code class="inl">height</code>, <code class="inl">size</code> and
+      <code class="inl">countLeaves</code> are all <em>postorder</em> computations: the answer for a node depends on the
+      answers for its children, so the children must be solved first.
+    </div>
+
+    <h3>5.5 Building and testing the sample tree</h3>
+    <span class="filename">TreeDemo.java</span>
+    <pre><code class="java">public class TreeDemo {
+    public static void main(String[] args) {
+        /*              A
+                      /   \
+                     B     C
+                    / \     \
+                   D   E     F
+                      /
+                     G
+        */
+        TreeNode a = new TreeNode('A');
+        TreeNode b = new TreeNode('B');
+        TreeNode c = new TreeNode('C');
+        TreeNode d = new TreeNode('D');
+        TreeNode e = new TreeNode('E');
+        TreeNode f = new TreeNode('F');
+        TreeNode g = new TreeNode('G');
+
+        a.left = b;  a.right = c;
+        b.left = d;  b.right = e;
+        c.right = f;
+        e.left = g;
+
+        BinaryTree tree = new BinaryTree(a);
+
+        System.out.print("preorder   : "); tree.preorder();
+        System.out.print("inorder    : "); tree.inorder();
+        System.out.print("postorder  : "); tree.postorder();
+        System.out.print("level-order: "); tree.levelOrder();
+
+        System.out.println("height      = " + tree.height());       // 3
+        System.out.println("size        = " + tree.size());         // 7
+        System.out.println("leaves      = " + tree.countLeaves());  // 3
+        System.out.println("contains G  = " + tree.contains('G'));  // true
+        System.out.println("contains Z  = " + tree.contains('Z'));  // false
+
+        System.out.println("--- iterative versions ---");
+        IterativeTraversals.preorder(a);
+        IterativeTraversals.inorder(a);
+        IterativeTraversals.postorder(a);
+    }
+}</code></pre>
+
+    <h4>Expected console output</h4>
+    <pre><code class="java">preorder   : A B D E G C F
+inorder    : D B G E A C F
+postorder  : D G E B F C A
+level-order: A B C D E F G
+height      = 3
+size        = 7
+leaves      = 3
+contains G  = true
+contains Z  = false
+--- iterative versions ---
+A B D E G C F
+D B G E A C F
+D G E B F C A</code></pre>
+
+    <h3>5.6 Complexity summary</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Operation</th><th class="center">Time</th><th class="center">Extra space</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Any traversal</td><td class="center">O(n)</td><td class="center">O(h)</td><td>Each node is visited once; h is the height (recursion depth or explicit stack size)</td></tr>
+          <tr><td>Level-order</td><td class="center">O(n)</td><td class="center">O(w)</td><td>w = maximum width of the tree; the queue can hold a whole level</td></tr>
+          <tr><td>height / size / leaves</td><td class="center">O(n)</td><td class="center">O(h)</td><td>Must inspect every node</td></tr>
+          <tr><td>search (unordered)</td><td class="center">O(n)</td><td class="center">O(h)</td><td>No ordering rule to exploit — this improves to O(h) in a BST</td></tr>
+          <tr><td>insert at first free slot</td><td class="center">O(n)</td><td class="center">O(w)</td><td>Level-order scan</td></tr>
+          <tr><td>clear / delete tree</td><td class="center">O(n)</td><td class="center">O(h)</td><td>Postorder — free children before the parent</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <strong>h</strong> ranges from <strong>⌊log₂ n⌋</strong> for a balanced tree to <strong>n − 1</strong> for a skewed one.
+      That difference — O(log n) versus O(n) — is the entire motivation for balanced trees later in the course.
+    </p>
+  </section>
+
+  <!-- ================= 6. LAB ================= -->
+  <section class="card" id="lab">
+    <h2><span class="num">6</span> Laboratory — implement &amp; test</h2>
+    <p class="lead">Work in pairs. Submit a single <code class="inl">.java</code> file (or a small project) plus your console output.</p>
+
+    <div class="labitem">
+      <div class="labnum">1</div>
+      <div class="body">
+        <h4>Warm-up: build the node class</h4>
+        <p>Write <code class="inl">TreeNode</code> with fields <code class="inl">char data</code>, <code class="inl">TreeNode left</code>, <code class="inl">TreeNode right</code>, a constructor and <code class="inl">isLeaf()</code>.</p>
+      </div>
+    </div>
+
+    <div class="labitem">
+      <div class="labnum">2</div>
+      <div class="body">
+        <h4>Build the lecture tree by hand</h4>
+        <p>Create the nodes A–G and wire them together exactly as in section 5.5. Draw the tree on paper first, then write the linking statements. Verify with <code class="inl">tree.height() == 3</code> and <code class="inl">tree.size() == 7</code>.</p>
+      </div>
+    </div>
+
+    <div class="labitem">
+      <div class="labnum">3</div>
+      <div class="body">
+        <h4>Recursive traversals</h4>
+        <p>Implement <code class="inl">preorder()</code>, <code class="inl">inorder()</code> and <code class="inl">postorder()</code> recursively. Your output must match exactly:</p>
+        <pre style="margin-top:8px"><code class="java">preorder  : A B D E G C F
+inorder   : D B G E A C F
+postorder : D G E B F C A</code></pre>
+      </div>
+    </div>
+
+    <div class="labitem">
+      <div class="labnum">4</div>
+      <div class="body">
+        <h4>Iterative traversals</h4>
+        <p>Re-implement all three using <code class="inl">ArrayDeque&lt;TreeNode&gt;</code> as an explicit stack (no recursion allowed). Confirm the output is identical to step 3. <em>Hint for postorder:</em> keep a <code class="inl">lastVisited</code> reference.</p>
+      </div>
+    </div>
+
+    <div class="labitem">
+      <div class="labnum">5</div>
+      <div class="body">
+        <h4>Level-order</h4>
+        <p>Implement <code class="inl">levelOrder()</code> with a <code class="inl">Queue</code>. Then add <code class="inl">levelOrderByLevel()</code> so that each level prints on its own line:</p>
+        <pre style="margin-top:8px"><code class="java">A
+B C
+D E F
+G</code></pre>
+      </div>
+    </div>
+
+    <div class="labitem">
+      <div class="labnum">6</div>
+      <div class="body">
+        <h4>Operations</h4>
+        <p>Add and test <code class="inl">height()</code>, <code class="inl">size()</code>, <code class="inl">countLeaves()</code> and <code class="inl">contains(char)</code>. Write a tiny <code class="inl">assert</code>-style checker that prints <code class="inl">PASS</code>/<code class="inl">FAIL</code> for each expected value.</p>
+      </div>
+    </div>
+
+    <div class="labitem">
+      <div class="labnum">7</div>
+      <div class="body">
+        <h4>Array representation</h4>
+        <p>Implement <code class="inl">ArrayBinaryTree</code> from section 3. Store the same tree in an <code class="inl">Integer[]</code> of size 11 and print its preorder. Then build a <em>skewed</em> tree of 5 nodes and explain in two sentences why the array form is a bad choice for it.</p>
+      </div>
+    </div>
+
+    <div class="labitem">
+      <div class="labnum">8</div>
+      <div class="body">
+        <h4>Challenge — count and compare</h4>
+        <p>Write <code class="inl">countNodesAtLevel(int level)</code> using a queue. Then write <code class="inl">printTree()</code> that displays the tree sideways (rotate your head 90° left to read it) using an inorder walk with indentation. Bonus: add <code class="inl">isComplete()</code> and <code class="inl">isFull()</code>.</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>Submission checklist:</strong> compiles without warnings · traversals match the expected output character-for-character ·
+      no recursion in the iterative methods · a short README explaining which traversal you would use to
+      (a) free a tree, (b) print a tree by level, (c) clone a tree, and why.
+    </div>
+  </section>
+
+  <!-- ================= 7. QUIZ ================= -->
+  <section class="card" id="quiz">
+    <h2><span class="num">7</span> Self-check quiz</h2>
+    <p class="lead">Click an option to get instant feedback.</p>
+
+    <div class="quiz" data-answer="c">
+      <p class="q">1. What is the maximum number of nodes on level ℓ of a binary tree, where the root is level 0?</p>
+      <button class="opt" data-opt="a">A. ℓ + 1</button>
+      <button class="opt" data-opt="b">B. 2ℓ</button>
+      <button class="opt" data-opt="c">C. 2<sup>ℓ</sup></button>
+      <button class="opt" data-opt="d">D. 2<sup>ℓ+1</sup> − 1</button>
+      <p class="fb"></p>
+    </div>
+
+    <div class="quiz" data-answer="b">
+      <p class="q">2. A binary tree has 12 nodes. How many null links (empty child slots) does it contain?</p>
+      <button class="opt" data-opt="a">A. 11</button>
+      <button class="opt" data-opt="b">B. 13</button>
+      <button class="opt" data-opt="c">C. 24</button>
+      <button class="opt" data-opt="d">D. It depends on the shape</button>
+      <p class="fb"></p>
+    </div>
+
+    <div class="quiz" data-answer="a">
+      <p class="q">3. Which traversal visits the root of every subtree <em>last</em>?</p>
+      <button class="opt" data-opt="a">A. Postorder</button>
+      <button class="opt" data-opt="b">B. Preorder</button>
+      <button class="opt" data-opt="c">C. Inorder</button>
+      <button class="opt" data-opt="d">D. Level-order</button>
+      <p class="fb"></p>
+    </div>
+
+    <div class="quiz" data-answer="d">
+      <p class="q">4. In an array-based representation with 0-based indexing, where is the <em>right</em> child of the node at index 5?</p>
+      <button class="opt" data-opt="a">A. Index 10</button>
+      <button class="opt" data-opt="b">B. Index 11</button>
+      <button class="opt" data-opt="c">C. Index 6</button>
+      <button class="opt" data-opt="d">D. Index 12</button>
+      <p class="fb"></p>
+    </div>
+
+    <div class="quiz" data-answer="b">
+      <p class="q">5. Which data structure does a level-order traversal require?</p>
+      <button class="opt" data-opt="a">A. A stack</button>
+      <button class="opt" data-opt="b">B. A queue</button>
+      <button class="opt" data-opt="c">C. A priority queue</button>
+      <button class="opt" data-opt="d">D. No auxiliary structure at all</button>
+      <p class="fb"></p>
+    </div>
+
+    <div class="quiz" data-answer="c">
+      <p class="q">6. For which tree shape is the sequential (array) representation most efficient?</p>
+      <button class="opt" data-opt="a">A. A skewed tree</button>
+      <button class="opt" data-opt="b">B. Any binary tree</button>
+      <button class="opt" data-opt="c">C. A complete binary tree</button>
+      <button class="opt" data-opt="d">D. A tree with many null links</button>
+      <p class="fb"></p>
+    </div>
+  </section>
+
+  <!-- ================= 8. SUMMARY ================= -->
+  <section class="card" id="summary">
+    <h2><span class="num">8</span> Summary &amp; cheat sheet</h2>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th style="width:30%">Concept</th><th>Remember this</th></tr></thead>
+        <tbody>
+          <tr><td>Tree</td><td>A recursive, hierarchical structure; <em>n</em> nodes, <em>n − 1</em> edges, one root, no cycles.</td></tr>
+          <tr
